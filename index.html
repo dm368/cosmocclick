@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idle Space Explorer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --primary-dark: #5649c0;
+            --secondary: #00cec9;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #d63031;
+            --space: #0f0f1a;
+            --star: rgba(255, 255, 255, 0.8);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--space);
+            color: var(--light);
+            overflow-x: hidden;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(var(--star) 1px, transparent 1px),
+                radial-gradient(var(--star) 1px, transparent 1px);
+            background-size: 50px 50px;
+            background-position: 0 0, 25px 25px;
+            animation: stars 100s linear infinite;
+        }
+
+        @keyframes stars {
+            0% { background-position: 0 0, 25px 25px; }
+            100% { background-position: 1000px 1000px, 1025px 1025px; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        .logo i {
+            font-size: 28px;
+        }
+
+        .currency-display {
+            display: flex;
+            gap: 20px;
+        }
+
+        .currency {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .currency.energy i {
+            color: var(--secondary);
+        }
+
+        .currency.money i {
+            color: var(--warning);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border: none;
+            border-radius: 8px;
+            color: var(--light);
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab:hover {
+            background: rgba(108, 92, 231, 0.2);
+        }
+
+        .tab.active {
+            background: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Game Tab */
+        .main-game {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        .planet-container {
+            position: relative;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .planet {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            box-shadow: 0 0 50px rgba(108, 92, 231, 0.5);
+            position: relative;
+            animation: rotate 30s linear infinite;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .planet:active {
+            transform: scale(0.95);
+        }
+
+        .planet::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 30%;
+            height: 30%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .click-effect {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: clickAnim 0.5s ease-out forwards;
+        }
+
+        @keyframes clickAnim {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(10); opacity: 0; }
+        }
+
+        .stats-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+        }
+
+        /* Upgrades Tab */
+        .upgrades-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .upgrade-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+
+        .upgrade-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary);
+        }
+
+        .upgrade-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .upgrade-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .upgrade-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        .upgrade-cost {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: bold;
+            color: var(--warning);
+        }
+
+        .upgrade-description {
+            margin-bottom: 15px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .upgrade-progress {
+            height: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+
+        .upgrade-level {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Achievements Tab */
+        .achievements-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .achievement-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .achievement-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .achievement-info {
+            flex-grow: 1;
+        }
+
+        .achievement-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .achievement-description {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 5px;
+        }
+
+        .achievement-reward {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: var(--warning);
+        }
+
+        .achievement-card.locked {
+            opacity: 0.5;
+        }
+
+        .achievement-card.locked .achievement-icon {
+            background: var(--dark);
+        }
+
+        /* Settings Tab */
+        .settings-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .settings-group {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .setting-label {
+            font-weight: 500;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .button {
+            padding: 12px 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .button.secondary {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .button.secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .button.danger {
+            background: var(--danger);
+        }
+
+        .button.danger:hover {
+            background: #b02a2a;
+        }
+
+        .buttons-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--dark);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(200%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            border-left: 4px solid var(--primary);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left-color: var(--success);
+        }
+
+        .notification.warning {
+            border-left-color: var(--warning);
+        }
+
+        .notification.danger {
+            border-left-color: var(--danger);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-game {
+                grid-template-columns: 1fr;
+            }
+            
+            .upgrades-container, .achievements-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(108, 92, 231, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(108, 92, 231, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-rocket"></i>
+                <span>Idle Space Explorer</span>
+            </div>
+            <div class="currency-display">
+                <div class="currency energy">
+                    <i class="fas fa-bolt"></i>
+                    <span id="energy">0</span>
+                </div>
+                <div class="currency money">
+                    <i class="fas fa-coins"></i>
+                    <span id="money">0</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="game"><i class="fas fa-gamepad"></i> Игра</button>
+            <button class="tab" data-tab="upgrades"><i class="fas fa-level-up-alt"></i> Улучшения</button>
+            <button class="tab" data-tab="achievements"><i class="fas fa-trophy"></i> Достижения</button>
+            <button class="tab" data-tab="settings"><i class="fas fa-cog"></i> Настройки</button>
+        </div>
+
+        <div id="game" class="tab-content active">
+            <div class="main-game">
+                <div class="planet-container" id="planet">
+                    <div class="planet floating"></div>
+                </div>
+                <div class="stats-panel">
+                    <h3 class="stats-title"><i class="fas fa-chart-line"></i> Статистика</h3>
+                    <div class="stat-item">
+                        <div class="stat-label">
+                            <i class="fas fa-hand-pointer"></i>
+                            <span>Кликов в секунду</span>
+                        </div>
+                        <div class="stat-value" id="cps">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">
+                            <i class="fas fa-bolt"></i>
+                            <span>Энергии в секунду</span>
+                        </div>
+                        <div class="stat-value" id="eps">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">
+                            <i class="fas fa-coins"></i>
+                            <span>Денег в секунду</span>
+                        </div>
+                        <div class="stat-value" id="mps">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">
+                            <i class="fas fa-user-astronaut"></i>
+                            <span>Уровень</span>
+                        </div>
+                        <div class="stat-value" id="level">1</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">
+                            <i class="fas fa-star"></i>
+                            <span>Опыт</span>
+                        </div>
+                        <div class="stat-value" id="xp">0/100</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="upgrades" class="tab-content">
+            <h2><i class="fas fa-level-up-alt"></i> Улучшения</h2>
+            <p>Улучшайте свои показатели и автоматизируйте процессы</p>
+            
+            <div class="upgrades-container" id="upgrades-container">
+                <!-- Upgrades will be added here dynamically -->
+            </div>
+        </div>
+
+        <div id="achievements" class="tab-content">
+            <h2><i class="fas fa-trophy"></i> Достижения</h2>
+            <p>Зарабатывайте достижения за различные действия в игре</p>
+            
+            <div class="achievements-container" id="achievements-container">
+                <!-- Achievements will be added here dynamically -->
+            </div>
+        </div>
+
+        <div id="settings" class="tab-content">
+            <div class="settings-container">
+                <div class="settings-group">
+                    <h3 class="settings-title"><i class="fas fa-volume-up"></i> Звук</h3>
+                    <div class="setting-item">
+                        <span class="setting-label">Фоновый звук</span>
+                        <label class="switch">
+                            <input type="checkbox" id="bgSound" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Звуки эффектов</span>
+                        <label class="switch">
+                            <input type="checkbox" id="fxSound" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Громкость</span>
+                        <input type="range" id="volume" min="0" max="100" value="50">
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3 class="settings-title"><i class="fas fa-paint-brush"></i> Внешний вид</h3>
+                    <div class="setting-item">
+                        <span class="setting-label">Темная тема</span>
+                        <label class="switch">
+                            <input type="checkbox" id="darkTheme" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Анимации</span>
+                        <label class="switch">
+                            <input type="checkbox" id="animations" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3 class="settings-title"><i class="fas fa-save"></i> Сохранение</h3>
+                    <div class="setting-item">
+                        <span class="setting-label">Автосохранение</span>
+                        <label class="switch">
+                            <input type="checkbox" id="autoSave" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="buttons-group">
+                        <button class="button" id="saveBtn">
+                            <i class="fas fa-save"></i> Сохранить
+                        </button>
+                        <button class="button secondary" id="loadBtn">
+                            <i class="fas fa-folder-open"></i> Загрузить
+                        </button>
+                        <button class="button danger" id="resetBtn">
+                            <i class="fas fa-trash"></i> Сбросить
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notification-text">Уведомление</span>
+    </div>
+
+    <audio id="clickSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3" preload="auto"></audio>
+    <audio id="bgMusic" src="https://assets.mixkit.co/music/preview/mixkit-ethereal-ambient-space-492.mp3" loop preload="auto"></audio>
+
+    <script>
+        // Game State
+        const gameState = {
+            energy: 0,
+            money: 0,
+            xp: 0,
+            level: 1,
+            xpToNextLevel: 100,
+            clickPower: 1,
+            autoClickers: 0,
+            energyGenerators: 0,
+            moneyGenerators: 0,
+            upgrades: {},
+            achievements: {},
+            lastUpdate: Date.now(),
+            totalClicks: 0,
+            totalEnergy: 0,
+            totalMoney: 0,
+            playTime: 0
+        };
+
+        // Upgrades Data
+        const upgradesData = [
+            {
+                id: 'click_power_1',
+                name: 'Улучшенные перчатки',
+                description: 'Увеличивает мощность каждого клика на +1',
+                baseCost: 50,
+                costGrowth: 1.15,
+                maxLevel: 10,
+                effect: (level) => ({ clickPower: level })
+            },
+            {
+                id: 'auto_clicker',
+                name: 'Автокликер',
+                description: 'Автоматически кликает 1 раз в секунду',
+                baseCost: 100,
+                costGrowth: 1.3,
+                maxLevel: 20,
+                effect: (level) => ({ autoClickers: level })
+            },
+            {
+                id: 'energy_generator',
+                name: 'Генератор энергии',
+                description: 'Производит 1 единицу энергии каждую секунду',
+                baseCost: 200,
+                costGrowth: 1.25,
+                maxLevel: 15,
+                effect: (level) => ({ energyGenerators: level })
+            },
+            {
+                id: 'energy_storage',
+                name: 'Хранилище энергии',
+                description: 'Увеличивает максимальный запас энергии на 100',
+                baseCost: 150,
+                costGrowth: 1.2,
+                maxLevel: 10,
+                effect: (level) => ({ maxEnergy: level * 100 })
+            },
+            {
+                id: 'money_generator',
+                name: 'Добытчик космических минералов',
+                description: 'Производит 1 денежную единицу каждую секунду',
+                baseCost: 500,
+                costGrowth: 1.4,
+                maxLevel: 10,
+                effect: (level) => ({ moneyGenerators: level })
+            },
+            {
+                id: 'energy_efficiency',
+                name: 'Энергоэффективность',
+                description: 'Увеличивает производство энергии на 10%',
+                baseCost: 300,
+                costGrowth: 1.5,
+                maxLevel: 5,
+                effect: (level) => ({ energyMultiplier: 1 + level * 0.1 })
+            },
+            {
+                id: 'money_efficiency',
+                name: 'Финансовая эффективность',
+                description: 'Увеличивает производство денег на 10%',
+                baseCost: 400,
+                costGrowth: 1.5,
+                maxLevel: 5,
+                effect: (level) => ({ moneyMultiplier: 1 + level * 0.1 })
+            },
+            {
+                id: 'xp_boost',
+                name: 'Ускоритель опыта',
+                description: 'Увеличивает получаемый опыт на 20%',
+                baseCost: 600,
+                costGrowth: 1.6,
+                maxLevel: 5,
+                effect: (level) => ({ xpMultiplier: 1 + level * 0.2 })
+            }
+        ];
+
+        // Achievements Data
+        const achievementsData = [
+            {
+                id: 'first_click',
+                name: 'Первый шаг',
+                description: 'Совершите первый клик',
+                icon: 'fas fa-hand-pointer',
+                condition: (state) => state.totalClicks >= 1,
+                reward: { money: 10 }
+            },
+            {
+                id: 'hundred_clicks',
+                name: 'Настойчивость',
+                description: 'Совершите 100 кликов',
+                icon: 'fas fa-mouse',
+                condition: (state) => state.totalClicks >= 100,
+                reward: { money: 50, energy: 20 }
+            },
+            {
+                id: 'thousand_clicks',
+                name: 'Кликоманьяк',
+                description: 'Совершите 1000 кликов',
+                icon: 'fas fa-fingerprint',
+                condition: (state) => state.totalClicks >= 1000,
+                reward: { money: 200, energy: 100 }
+            },
+            {
+                id: 'first_upgrade',
+                name: 'Прогресс',
+                description: 'Купите первое улучшение',
+                icon: 'fas fa-level-up-alt',
+                condition: (state) => Object.values(state.upgrades).some(level => level > 0),
+                reward: { money: 30 }
+            },
+            {
+                id: 'energy_collector',
+                name: 'Сборщик энергии',
+                description: 'Соберите 1000 единиц энергии',
+                icon: 'fas fa-battery-full',
+                condition: (state) => state.totalEnergy >= 1000,
+                reward: { money: 100, energy: 50 }
+            },
+            {
+                id: 'rich',
+                name: 'Богач',
+                description: 'Заработайте 5000 денег',
+                icon: 'fas fa-coins',
+                condition: (state) => state.totalMoney >= 5000,
+                reward: { money: 500 }
+            },
+            {
+                id: 'level_5',
+                name: 'Опытный исследователь',
+                description: 'Достигните 5 уровня',
+                icon: 'fas fa-user-astronaut',
+                condition: (state) => state.level >= 5,
+                reward: { money: 300, energy: 150 }
+            },
+            {
+                id: 'level_10',
+                name: 'Ветеран космоса',
+                description: 'Достигните 10 уровня',
+                icon: 'fas fa-rocket',
+                condition: (state) => state.level >= 10,
+                reward: { money: 1000, energy: 500 }
+            },
+            {
+                id: 'hour_played',
+                name: 'Преданность делу',
+                description: 'Играйте в течение 1 часа',
+                icon: 'fas fa-clock',
+                condition: (state) => state.playTime >= 3600,
+                reward: { money: 500, energy: 200 }
+            }
+        ];
+
+        // DOM Elements
+        const energyDisplay = document.getElementById('energy');
+        const moneyDisplay = document.getElementById('money');
+        const cpsDisplay = document.getElementById('cps');
+        const epsDisplay = document.getElementById('eps');
+        const mpsDisplay = document.getElementById('mps');
+        const levelDisplay = document.getElementById('level');
+        const xpDisplay = document.getElementById('xp');
+        const planet = document.querySelector('.planet');
+        const planetContainer = document.getElementById('planet');
+        const notification = document.getElementById('notification');
+        const notificationText = document.getElementById('notification-text');
+        const clickSound = document.getElementById('clickSound');
+        const bgMusic = document.getElementById('bgMusic');
+        const upgradesContainer = document.getElementById('upgrades-container');
+        const achievementsContainer = document.getElementById('achievements-container');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // Game Variables
+        let clicksPerSecond = 0;
+        let energyPerSecond = 0;
+        let moneyPerSecond = 0;
+        let lastClickTime = 0;
+        let clickCount = 0;
+        let clickTimer;
+        let saveInterval;
+        let gameLoopInterval;
+
+        // Settings
+        const settings = {
+            bgSound: true,
+            fxSound: true,
+            volume: 50,
+            darkTheme: true,
+            animations: true,
+            autoSave: true,
+            saveInterval: 30000 // 30 seconds
+        };
+
+        // Initialize the game
+        function init() {
+            loadGame();
+            setupEventListeners();
+            renderUpgrades();
+            renderAchievements();
+            updateDisplays();
+            startGameLoop();
+            
+            if (settings.autoSave) {
+                startSaveInterval();
+            }
+            
+            if (settings.bgSound) {
+                bgMusic.volume = settings.volume / 100;
+                bgMusic.play().catch(e => console.log("Auto-play prevented:", e));
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Planet click
+            planet.addEventListener('click', handlePlanetClick);
+            
+            // Tab switching
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    switchTab(tabId);
+                });
+            });
+            
+            // Settings
+            document.getElementById('bgSound').addEventListener('change', (e) => {
+                settings.bgSound = e.target.checked;
+                if (settings.bgSound) {
+                    bgMusic.volume = settings.volume / 100;
+                    bgMusic.play().catch(e => console.log("Auto-play prevented:", e));
+                } else {
+                    bgMusic.pause();
+                }
+            });
+            
+            document.getElementById('fxSound').addEventListener('change', (e) => {
+                settings.fxSound = e.target.checked;
+            });
+            
+            document.getElementById('volume').addEventListener('input', (e) => {
+                settings.volume = e.target.value;
+                bgMusic.volume = settings.volume / 100;
+                if (settings.bgSound && bgMusic.paused) {
+                    bgMusic.play().catch(e => console.log("Auto-play prevented:", e));
+                }
+            });
+            
+            document.getElementById('darkTheme').addEventListener('change', (e) => {
+                settings.darkTheme = e.target.checked;
+                document.body.classList.toggle('dark-theme', settings.darkTheme);
+            });
+            
+            document.getElementById('animations').addEventListener('change', (e) => {
+                settings.animations = e.target.checked;
+            });
+            
+            document.getElementById('autoSave').addEventListener('change', (e) => {
+                settings.autoSave = e.target.checked;
+                if (settings.autoSave) {
+                    startSaveInterval();
+                } else {
+                    clearInterval(saveInterval);
+                }
+            });
+            
+            // Buttons
+            document.getElementById('saveBtn').addEventListener('click', saveGame);
+            document.getElementById('loadBtn').addEventListener('click', loadGame);
+            document.getElementById('resetBtn').addEventListener('click', resetGame);
+            
+            // Window events
+            window.addEventListener('beforeunload', (e) => {
+                if (settings.autoSave) {
+                    saveGame();
+                }
+            });
+        }
+
+        // Handle planet click
+        function handlePlanetClick(e) {
+            // Play sound
+            if (settings.fxSound) {
+                clickSound.currentTime = 0;
+                clickSound.volume = settings.volume / 100;
+                clickSound.play().catch(err => console.log(err));
+            }
+            
+            // Add click effect
+            if (settings.animations) {
+                createClickEffect(e);
+            }
+            
+            // Calculate click power with upgrades
+            let clickPower = gameState.clickPower;
+            const clickPowerUpgrade = gameState.upgrades['click_power_1'] || 0;
+            clickPower += clickPowerUpgrade;
+            
+            // Add resources
+            gameState.energy += clickPower;
+            gameState.totalEnergy += clickPower;
+            gameState.xp += 1 * (gameState.upgrades['xp_boost'] ? 1 + gameState.upgrades['xp_boost'] * 0.2 : 1);
+            gameState.totalClicks++;
+            
+            // Track clicks per second
+            const now = Date.now();
+            if (now - lastClickTime > 1000) {
+                clicksPerSecond = clickCount;
+                clickCount = 0;
+                lastClickTime = now;
+            }
+            clickCount++;
+            
+            // Clear previous timer if exists
+            if (clickTimer) clearTimeout(clickTimer);
+            
+            // Reset CPS after 1 second of inactivity
+            clickTimer = setTimeout(() => {
+                clicksPerSecond = 0;
+            }, 1000);
+            
+            // Check for achievements
+            checkAchievements();
+            
+            // Check for level up
+            checkLevelUp();
+            
+            // Update displays
+            updateDisplays();
+        }
+
+        // Create click effect
+        function createClickEffect(e) {
+            const rect = planetContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const effect = document.createElement('div');
+            effect.className = 'click-effect';
+            effect.style.left = `${x}px`;
+            effect.style.top = `${y}px`;
+            
+            planetContainer.appendChild(effect);
+            
+            // Remove effect after animation
+            setTimeout(() => {
+                effect.remove();
+            }, 500);
+        }
+
+        // Start game loop
+        function startGameLoop() {
+            const startTime = Date.now();
+            
+            gameLoopInterval = setInterval(() => {
+                const now = Date.now();
+                const deltaTime = (now - gameState.lastUpdate) / 1000; // in seconds
+                gameState.lastUpdate = now;
+                gameState.playTime += deltaTime;
+                
+                // Calculate resources per second
+                calculateResourcesPerSecond();
+                
+                // Generate auto resources
+                generateAutoResources(deltaTime);
+                
+                // Update displays
+                updateDisplays();
+                
+                // Check for achievements
+                checkAchievements();
+                
+                // Check for level up
+                checkLevelUp();
+                
+            }, 1000 / 30); // 30 FPS
+        }
+
+        // Calculate resources per second
+        function calculateResourcesPerSecond() {
+            // Energy per second
+            const baseEnergy = gameState.energyGenerators || 0;
+            const energyMultiplier = gameState.upgrades['energy_efficiency'] ? 1 + gameState.upgrades['energy_efficiency'] * 0.1 : 1;
+            energyPerSecond = baseEnergy * energyMultiplier;
+            
+            // Money per second
+            const baseMoney = gameState.moneyGenerators || 0;
+            const moneyMultiplier = gameState.upgrades['money_efficiency'] ? 1 + gameState.upgrades['money_efficiency'] * 0.1 : 1;
+            moneyPerSecond = baseMoney * moneyMultiplier;
+        }
+
+        // Generate auto resources
+        function generateAutoResources(deltaTime) {
+            // Auto clickers
+            if (gameState.autoClickers > 0) {
+                const clicks = gameState.autoClickers * deltaTime;
+                gameState.energy += clicks * gameState.clickPower;
+                gameState.totalEnergy += clicks * gameState.clickPower;
+                gameState.xp += clicks * (gameState.upgrades['xp_boost'] ? 1 + gameState.upgrades['xp_boost'] * 0.2 : 1);
+                gameState.totalClicks += clicks;
+            }
+            
+            // Energy generators
+            if (energyPerSecond > 0) {
+                const energy = energyPerSecond * deltaTime;
+                gameState.energy += energy;
+                gameState.totalEnergy += energy;
+            }
+            
+            // Money generators
+            if (moneyPerSecond > 0) {
+                const money = moneyPerSecond * deltaTime;
+                gameState.money += money;
+                gameState.totalMoney += money;
+            }
+        }
+
+        // Update all displays
+        function updateDisplays() {
+            // Resources
+            energyDisplay.textContent = Math.floor(gameState.energy).toLocaleString();
+            moneyDisplay.textContent = Math.floor(gameState.money).toLocaleString();
+            
+            // Stats
+            cpsDisplay.textContent = clicksPerSecond.toFixed(1);
+            epsDisplay.textContent = energyPerSecond.toFixed(1);
+            mpsDisplay.textContent = moneyPerSecond.toFixed(1);
+            
+            // Level
+            levelDisplay.textContent = gameState.level;
+            xpDisplay.textContent = `${Math.floor(gameState.xp)}/${Math.floor(gameState.xpToNextLevel)}`;
+            
+            // Update upgrades that can be afforded
+            updateUpgradeButtons();
+        }
+
+        // Render upgrades
+        function renderUpgrades() {
+            upgradesContainer.innerHTML = '';
+            
+            upgradesData.forEach(upgrade => {
+                const level = gameState.upgrades[upgrade.id] || 0;
+                const cost = calculateUpgradeCost(upgrade, level);
+                const canAfford = gameState.money >= cost && level < upgrade.maxLevel;
+                
+                const upgradeEl = document.createElement('div');
+                upgradeEl.className = `upgrade-card ${canAfford ? '' : 'disabled'}`;
+                upgradeEl.innerHTML = `
+                    <div class="upgrade-header">
+                        <h4 class="upgrade-title">${upgrade.name}</h4>
+                        <div class="upgrade-cost">
+                            <i class="fas fa-coins"></i>
+                            <span>${Math.floor(cost)}</span>
+                        </div>
+                    </div>
+                    <p class="upgrade-description">${upgrade.description}</p>
+                    <div class="upgrade-progress">
+                        <div class="progress-bar" style="width: ${(level / upgrade.maxLevel) * 100}%"></div>
+                    </div>
+                    <div class="upgrade-level">Уровень: ${level}/${upgrade.maxLevel}</div>
+                `;
+                
+                if (canAfford) {
+                    upgradeEl.addEventListener('click', () => purchaseUpgrade(upgrade.id));
+                }
+                
+                upgradesContainer.appendChild(upgradeEl);
+            });
+        }
+
+        // Calculate upgrade cost
+        function calculateUpgradeCost(upgrade, currentLevel) {
+            return Math.floor(upgrade.baseCost * Math.pow(upgrade.costGrowth, currentLevel));
+        }
+
+        // Purchase upgrade
+        function purchaseUpgrade(upgradeId) {
+            const upgrade = upgradesData.find(u => u.id === upgradeId);
+            if (!upgrade) return;
+            
+            const level = gameState.upgrades[upgradeId] || 0;
+            if (level >= upgrade.maxLevel) return;
+            
+            const cost = calculateUpgradeCost(upgrade, level);
+            if (gameState.money < cost) return;
+            
+            // Deduct cost
+            gameState.money -= cost;
+            
+            // Apply upgrade
+            gameState.upgrades[upgradeId] = level + 1;
+            
+            // Apply effects
+            const effects = upgrade.effect(level + 1);
+            Object.entries(effects).forEach(([key, value]) => {
+                gameState[key] = value;
+            });
+            
+            // Show notification
+            showNotification(`Улучшение "${upgrade.name}" куплено!`, 'success');
+            
+            // Re-render upgrades
+            renderUpgrades();
+            updateDisplays();
+        }
+
+        // Update upgrade buttons based on affordability
+        function updateUpgradeButtons() {
+            const upgradeCards = document.querySelectorAll('.upgrade-card');
+            
+            upgradeCards.forEach((card, index) => {
+                const upgrade = upgradesData[index];
+                const level = gameState.upgrades[upgrade.id] || 0;
+                const cost = calculateUpgradeCost(upgrade, level);
+                const canAfford = gameState.money >= cost && level < upgrade.maxLevel;
+                
+                // Update cost display
+                const costElement = card.querySelector('.upgrade-cost span');
+                if (costElement) {
+                    costElement.textContent = Math.floor(cost);
+                }
+                
+                // Update progress bar
+                const progressBar = card.querySelector('.progress-bar');
+                if (progressBar) {
+                    progressBar.style.width = `${(level / upgrade.maxLevel) * 100}%`;
+                }
+                
+                // Update level display
+                const levelElement = card.querySelector('.upgrade-level');
+                if (levelElement) {
+                    levelElement.textContent = `Уровень: ${level}/${upgrade.maxLevel}`;
+                }
+                
+                // Update card state
+                card.classList.toggle('disabled', !canAfford);
+                
+                // Update event listener
+                card.onclick = canAfford ? () => purchaseUpgrade(upgrade.id) : null;
+            });
+        }
+
+        // Render achievements
+        function renderAchievements() {
+            achievementsContainer.innerHTML = '';
+            
+            achievementsData.forEach(achievement => {
+                const achieved = gameState.achievements[achievement.id] || false;
+                const canAchieve = achievement.condition(gameState) && !achieved;
+                
+                const achievementEl = document.createElement('div');
+                achievementEl.className = `achievement-card ${achieved ? '' : 'locked'}`;
+                achievementEl.innerHTML = `
+                    <div class="achievement-icon">
+                        <i class="${achievement.icon}"></i>
+                    </div>
+                    <div class="achievement-info">
+                        <h4 class="achievement-title">${achievement.name}</h4>
+                        <p class="achievement-description">${achievement.description}</p>
+                        <div class="achievement-reward">
+                            <i class="fas fa-award"></i>
+                            <span>Награда: 
+                                ${achievement.reward.money ? `${achievement.reward.money} <i class="fas fa-coins"></i>` : ''}
+                                ${achievement.reward.energy ? `${achievement.reward.energy} <i class="fas fa-bolt"></i>` : ''}
+                            </span>
+                        </div>
+                    </div>
+                `;
+                
+                if (canAchieve) {
+                    achievementEl.classList.add('pulse');
+                    achievementEl.addEventListener('click', () => claimAchievement(achievement.id));
+                }
+                
+                achievementsContainer.appendChild(achievementEl);
+            });
+        }
+
+        // Check for new achievements
+        function checkAchievements() {
+            let newAchievements = false;
+            
+            achievementsData.forEach(achievement => {
+                if (!gameState.achievements[achievement.id] && achievement.condition(gameState)) {
+                    newAchievements = true;
+                }
+            });
+            
+            if (newAchievements) {
+                renderAchievements();
+            }
+        }
+
+        // Claim achievement
+        function claimAchievement(achievementId) {
+            const achievement = achievementsData.find(a => a.id === achievementId);
+            if (!achievement || gameState.achievements[achievementId]) return;
+            
+            if (!achievement.condition(gameState)) return;
+            
+            // Mark as achieved
+            gameState.achievements[achievementId] = true;
+            
+            // Apply rewards
+            if (achievement.reward.money) {
+                gameState.money += achievement.reward.money;
+                gameState.totalMoney += achievement.reward.money;
+            }
+            
+            if (achievement.reward.energy) {
+                gameState.energy += achievement.reward.energy;
+                gameState.totalEnergy += achievement.reward.energy;
+            }
+            
+            // Show notification
+            showNotification(`Достижение "${achievement.name}" получено!`, 'success');
+            
+            // Re-render achievements
+            renderAchievements();
+            updateDisplays();
+        }
+
+        // Check for level up
+        function checkLevelUp() {
+            if (gameState.xp >= gameState.xpToNextLevel) {
+                gameState.level++;
+                gameState.xp -= gameState.xpToNextLevel;
+                gameState.xpToNextLevel = Math.floor(gameState.xpToNextLevel * 1.5);
+                
+                // Reward for level up
+                gameState.money += gameState.level * 100;
+                gameState.energy += gameState.level * 50;
+                
+                // Show notification
+                showNotification(`Уровень повышен до ${gameState.level}!`, 'success');
+                
+                // Visual effect
+                if (settings.animations) {
+                    planet.classList.add('pulse');
+                    setTimeout(() => planet.classList.remove('pulse'), 2000);
+                }
+            }
+        }
+
+        // Switch tabs
+        function switchTab(tabId) {
+            // Update active tab
+            tabs.forEach(tab => {
+                if (tab.getAttribute('data-tab') === tabId) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Update active content
+            tabContents.forEach(content => {
+                if (content.id === tabId) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+            
+            // Special cases
+            if (tabId === 'upgrades') {
+                renderUpgrades();
+            } else if (tabId === 'achievements') {
+                renderAchievements();
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            notificationText.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            // Set icon based on type
+            let icon;
+            switch (type) {
+                case 'success': icon = 'fas fa-check-circle'; break;
+                case 'warning': icon = 'fas fa-exclamation-triangle'; break;
+                case 'danger': icon = 'fas fa-times-circle'; break;
+                default: icon = 'fas fa-info-circle';
+            }
+            
+            notification.innerHTML = `<i class="${icon}"></i><span id="notification-text">${message}</span>`;
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Save game
+        function saveGame() {
+            const saveData = {
+                gameState: gameState,
+                settings: settings,
+                timestamp: Date.now()
+            };
+            
+            localStorage.setItem('idleSpaceExplorerSave', JSON.stringify(saveData));
+            showNotification('Игра сохранена!', 'success');
+        }
+
+        // Load game
+        function loadGame() {
+            const saveData = localStorage.getItem('idleSpaceExplorerSave');
+            if (!saveData) return;
+            
+            try {
+                const parsedData = JSON.parse(saveData);
+                
+                // Load game state
+                Object.assign(gameState, parsedData.gameState);
+                gameState.lastUpdate = Date.now(); // Reset last update time
+                
+                // Load settings
+                Object.assign(settings, parsedData.settings);
+                
+                // Apply settings
+                document.getElementById('bgSound').checked = settings.bgSound;
+                document.getElementById('fxSound').checked = settings.fxSound;
+                document.getElementById('volume').value = settings.volume;
+                document.getElementById('darkTheme').checked = settings.darkTheme;
+                document.getElementById('animations').checked = settings.animations;
+                document.getElementById('autoSave').checked = settings.autoSave;
+                
+                if (settings.bgSound) {
+                    bgMusic.volume = settings.volume / 100;
+                    bgMusic.play().catch(e => console.log("Auto-play prevented:", e));
+                }
+                
+                showNotification('Игра загружена!', 'success');
+            } catch (e) {
+                console.error('Failed to load save:', e);
+                showNotification('Ошибка загрузки сохранения', 'danger');
+            }
+        }
+
+        // Start save interval
+        function startSaveInterval() {
+            if (saveInterval) clearInterval(saveInterval);
+            saveInterval = setInterval(saveGame, settings.saveInterval);
+        }
+
+        // Reset game
+        function resetGame() {
+            if (!confirm('Вы уверены, что хотите сбросить весь прогресс? Это действие нельзя отменить.')) return;
+            
+            // Reset game state
+            Object.keys(gameState).forEach(key => {
+                if (typeof gameState[key] === 'number') {
+                    gameState[key] = 0;
+                } else if (typeof gameState[key] === 'object') {
+                    gameState[key] = {};
+                }
+            });
+            
+            // Reset some default values
+            gameState.clickPower = 1;
+            gameState.level = 1;
+            gameState.xpToNextLevel = 100;
+            gameState.lastUpdate = Date.now();
+            
+            // Reset settings to default
+            settings.bgSound = true;
+            settings.fxSound = true;
+            settings.volume = 50;
+            settings.darkTheme = true;
+            settings.animations = true;
+            settings.autoSave = true;
+            
+            // Apply settings
+            document.getElementById('bgSound').checked = settings.bgSound;
+            document.getElementById('fxSound').checked = settings.fxSound;
+            document.getElementById('volume').value = settings.volume;
+            document.getElementById('darkTheme').checked = settings.darkTheme;
+            document.getElementById('animations').checked = settings.animations;
+            document.getElementById('autoSave').checked = settings.autoSave;
+            
+            // Stop and reset music
+            bgMusic.pause();
+            bgMusic.currentTime = 0;
+            if (settings.bgSound) {
+                bgMusic.volume = settings.volume / 100;
+                bgMusic.play().catch(e => console.log("Auto-play prevented:", e));
+            }
+            
+            // Update displays
+            updateDisplays();
+            renderUpgrades();
+            renderAchievements();
+            
+            showNotification('Игра сброшена!', 'warning');
+        }
+
+        // Initialize the game when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
